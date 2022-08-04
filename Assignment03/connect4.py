@@ -11,17 +11,14 @@
 """
 In this assignment, the task is to implement the minimax algorithm with depth
 limit for a Connect-4 game.
-
 To complete the assignment, you must finish these functions:
     minimax (line 196), alphabeta (line 237), and expectimax (line 280)
 in this file.
-
 In the Connect-4 game, two players place discs in a 6-by-7 board one by one.
 The discs will fall straight down and occupy the lowest available space of
 the chosen column. The player wins if four of his or her discs are connected
 in a line horizontally, vertically or diagonally.
 See https://en.wikipedia.org/wiki/Connect_Four for more details about the game.
-
 A Board() class is provided to simulate the game board.
 It has the following properties:
     b.rows          # number of rows of the game board
@@ -29,37 +26,27 @@ It has the following properties:
     b.PLAYER1       # an integer flag to represent the player 1
     b.PLAYER2       # an integer flag to represent the player 2
     b.EMPTY_SLOT    # an integer flag to represent an empty slot in the board;
-
 and the following methods:
     b.terminal()            # check if the game is terminal
                             # terminal means draw or someone wins
-
     b.has_draw()            # check if the game is a draw
-
     w = b.who_wins()        # return the winner of the game or None if there
                             # is no winner yet 
                             # w should be in [b.PLAYER1,b.PLAYER2, None]
-
     b.occupied(row, col)    # check if the slot at the specific location is
                             # occupied
-
     x = b.get(row, col)     # get the player occupying the given slot
                             # x should be in [b.PLAYER1, b.PLAYER2, b.EMPTY_SLOT]
-
     row = b.row(r)          # get the specific row of the game described using
                             # b.PLAYER1, b.PLAYER2 and b.EMPTY_SLOT
-
     col = b.column(r)       # get a specific column of the game board
-
     b.placeable(col)        # check if a disc can be placed at the specific
                             # column
-
     b.place(player, col)    # place a disc at the specific column for player
         # raise ValueError if the specific column does not have available space
     
     new_board = b.clone()   # return a new board instance having the same
                             # disc placement with b
-
     str = b.dump()          # a string to describe the game board using
                             # b.PLAYER1, b.PLAYER2 and b.EMPTY_SLOT
 Hints:
@@ -85,7 +72,6 @@ Hints:
     placed for the max player. Therefore, for each search algorithm, you should
     consider all valid actions for the max player, and return the one that leads 
     to the best value. 
-
 """
 
 # use math library if needed
@@ -101,7 +87,6 @@ def get_child_boards(player, board):
     player: board.PLAYER1 or board.PLAYER2
         the player that will place a disc on the board
     board: the current board instance
-
     Returns
     -------
     a list of (col, new_board) tuples,
@@ -121,13 +106,11 @@ def evaluate(player, board):
     """
     This is a function to evaluate the advantage of the specific player at the
     given game board.
-
     Parameters
     ----------
     player: board.PLAYER1 or board.PLAYER2
         the specific player
     board: the board instance
-
     Returns
     -------
     score: float
@@ -196,7 +179,6 @@ def evaluate(player, board):
 def minimax(player, board, depth_limit):
     """
     Minimax algorithm with limited search depth.
-
     Parameters
     ----------
     player: board.PLAYER1 or board.PLAYER2
@@ -205,7 +187,6 @@ def minimax(player, board, depth_limit):
     depth_limit: int
         the tree depth that the search algorithm needs to go further before stopping
     max_player: boolean
-
     Returns
     -------
     placement: int or None
@@ -215,29 +196,45 @@ def minimax(player, board, depth_limit):
     """
     max_player = player
     placement = None
-
 ### Please finish the code below ##############################################
 ###############################################################################
     def value(player, board, depth_limit):
-        pass
-
+        if board.terminal() or depth_limit==0:
+            return evaluate(max_player,board),None
+        if max_player == player:
+            value, pos = max_value(max_player, board, depth_limit)
+        elif next_player == player:
+            value, pos = min_value(next_player,board,depth_limit)
+        return value, pos
+            
     def max_value(player, board, depth_limit):
-        pass
+        score = -math.inf
+        for child in get_child_boards(player,board):
+            v,c = value(next_player,child[1],depth_limit-1)
+            if v>score:
+                score=v
+                placement = child[0]
+        return score, placement
     
     def min_value(player, board, depth_limit):
-        pass
+        score = math.inf
+        for child in get_child_boards(player,board):
+            v,c = value(max_player,child[1],depth_limit-1)
+            if v<score:
+                score=v
+                placement = child[0]
+        return score, placement
 
     next_player = board.PLAYER2 if player == board.PLAYER1 else board.PLAYER1
     score = -math.inf
-
+    a = value(player,board,depth_limit)
 ###############################################################################
-    return placement
+    return a[1]
 
 
 def alphabeta(player, board, depth_limit):
     """
     Minimax algorithm with alpha-beta pruning.
-
      Parameters
     ----------
     player: board.PLAYER1 or board.PLAYER2
@@ -248,8 +245,6 @@ def alphabeta(player, board, depth_limit):
     alpha: float
     beta: float
     max_player: boolean
-
-
     Returns
     -------
     placement: int or None
@@ -259,22 +254,49 @@ def alphabeta(player, board, depth_limit):
     """
     max_player = player
     placement = None
-
+    alpha = -math.inf
+    beta = math.inf
+    
 ### Please finish the code below ##############################################
 ###############################################################################
-    def value(player, board, depth_limit):
-        pass
-
-    def max_value(player, board, depth_limit):
-        pass
+    def value(player, board, depth_limit,alpha,beta):
+        if board.terminal() or depth_limit==0:
+            return evaluate(max_player,board),None
+        if max_player == player:
+            value, pos = max_value(max_player, board, depth_limit,alpha,beta)
+        elif next_player == player:
+            value, pos = min_value(next_player,board,depth_limit,alpha,beta)
+        return value, pos
+            
+    def max_value(player, board, depth_limit,alpha,beta):
+        score = -math.inf
+        for child in get_child_boards(player,board):
+            v,c = value(next_player,child[1],depth_limit-1,alpha,beta)
+            if v>score:
+                score=v
+                placement = child[0]
+            if score >= beta:
+                return score, placement
+            alpha = max(alpha, score)
+        return score, placement
     
-    def min_value(player, board, depth_limit):
-        pass
+    def min_value(player, board, depth_limit,alpha,beta):
+        score = math.inf
+        for child in get_child_boards(player,board):
+            v,c = value(max_player,child[1],depth_limit-1,alpha,beta)
+            if v<score:
+                score=v
+                placement = child[0]
+            if score <= alpha:
+                return score, placement
+            beta = min(beta, score)
+        return score, placement
 
     next_player = board.PLAYER2 if player == board.PLAYER1 else board.PLAYER1
     score = -math.inf
+    a = value(player,board,depth_limit,alpha,beta)
 ###############################################################################
-    return placement
+    return a[1]
 
 
 def expectimax(player, board, depth_limit):
@@ -285,7 +307,6 @@ def expectimax(player, board, depth_limit):
     Say that it is the turn for Player 1 when the function is called initially,
     then, during search, Player 2 is assumed to pick actions uniformly at
     random.
-
     Parameters
     ----------
     player: board.PLAYER1 or board.PLAYER2
@@ -294,7 +315,6 @@ def expectimax(player, board, depth_limit):
     depth_limit: int
         the tree depth that the search algorithm needs to go before stopping
     max_player: boolean
-
     Returns
     -------
     placement: int or None
@@ -308,18 +328,40 @@ def expectimax(player, board, depth_limit):
 ### Please finish the code below ##############################################
 ###############################################################################
     def value(player, board, depth_limit):
-        pass
+        if board.terminal() or depth_limit==0:
+            return evaluate(max_player,board),None
+        if max_player == player:
+            value, pos = max_value(max_player, board, depth_limit)
+        elif next_player == player:
+            value, pos = min_value(next_player,board,depth_limit)
+        return value, pos
 
     def max_value(player, board, depth_limit):
-        pass
+        score = -math.inf
+        for child in get_child_boards(player,board):
+            v,c = value(next_player,child[1],depth_limit-1)
+            if v>score:
+                score=v
+                placement = child[0]
+        return score, placement
     
     def min_value(player, board, depth_limit):
-        pass
+        score = 0
+        nodes = 0
+        avg_score = 0
+        for child in get_child_boards(player,board):
+            v,c = value(max_player,child[1],depth_limit-1)
+            nodes = nodes + 1
+            score = score + v
+            avg_score = score/nodes
+            placement = child[0]
+        return avg_score, placement
 
     next_player = board.PLAYER2 if player == board.PLAYER1 else board.PLAYER1
     score = -math.inf
+    a = value(player,board,depth_limit)
 ###############################################################################
-    return placement
+    return a[1]
 
 
 if __name__ == "__main__":
